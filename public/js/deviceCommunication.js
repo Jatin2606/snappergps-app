@@ -136,29 +136,35 @@ function setDisconnectFunction(onDisconnectFunction) {
  * @param {float} snapshotInterval Seconds between snapshots
  * @param {object} startDt Datetime object for when the device should start collecting snapshots
  * @param {object} endDt Datetime object for when the device should stop collecting snapshots
+ * @param {int} dailyActiveStart Seconds since midnight when daily recording should start
+ * @param {int} dailyActiveEnd Seconds since midnight when daily recording should end
+ * @param {int} dailyActiveUtcOffset Seconds east of UTC for the daily recording window
  * @param {function} callback Function called when complete
  */
-async function start(snapshotInterval, startDt, endDt, callback) {
+async function start(snapshotInterval, startDt, endDt, dailyActiveStart, dailyActiveEnd, dailyActiveUtcOffset, callback) {
 
     if (isDeviceAvailable()) {
 
-        const usbMessage = new Uint8Array([AM_USB_MSG_TYPE_START, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-        usbMessage[1] = snapshotInterval & 0xFF;
-        usbMessage[2] = (snapshotInterval >> 8) & 0xFF;
-        usbMessage[3] = (snapshotInterval >> 16) & 0xFF;
-        usbMessage[4] = (snapshotInterval >> 24) & 0xFF;
+        const usbMessage = new Uint8Array(25);
+        usbMessage[0] = AM_USB_MSG_TYPE_START;
+
+        const writeInt32 = (offset, value) => {
+            usbMessage[offset] = value & 0xFF;
+            usbMessage[offset + 1] = (value >> 8) & 0xFF;
+            usbMessage[offset + 2] = (value >> 16) & 0xFF;
+            usbMessage[offset + 3] = (value >> 24) & 0xFF;
+        };
+
+        writeInt32(1, snapshotInterval);
 
         const startTime = Math.round(startDt.valueOf() / 1000);
-        usbMessage[5] = startTime & 0xFF;
-        usbMessage[6] = (startTime >> 8) & 0xFF;
-        usbMessage[7] = (startTime >> 16) & 0xFF;
-        usbMessage[8] = (startTime >> 24) & 0xFF;
+        writeInt32(5, startTime);
 
         const endTime = Math.round(endDt.valueOf() / 1000);
-        usbMessage[9] = endTime & 0xFF;
-        usbMessage[10] = (endTime >> 8) & 0xFF;
-        usbMessage[11] = (endTime >> 16) & 0xFF;
-        usbMessage[12] = (endTime >> 24) & 0xFF;
+        writeInt32(9, endTime);
+        writeInt32(13, dailyActiveStart);
+        writeInt32(17, dailyActiveEnd);
+        writeInt32(21, dailyActiveUtcOffset);
 
         try {
 

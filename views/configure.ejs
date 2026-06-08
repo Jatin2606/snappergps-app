@@ -168,6 +168,37 @@
                     </div>
                 </div>
 
+                <div class="row">
+                    <div class="col">
+                        Optionally, restrict recording to the same active hours
+                        every day. Outside this window, the receiver sleeps and
+                        resumes at the next active start time.
+                    </div>
+                </div>
+
+                <div class="row row-ident">
+                    <div class="col">
+                        <label for="daily-window-checkbox" style="margin-right: 10px;">Only collect snapshots during daily active hours:</label>
+                        <input type="checkbox" id="daily-window-checkbox" value="0" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="row row-ident-2">
+                    <div class="col">
+                        <label id="daily-window-start-label" for="daily-window-start-time-input" style="margin-right: 10px; color: lightgray;">Daily start:</label>
+                        <input type="time" id="daily-window-start-time-input" disabled value="06:00">
+                        <label id="daily-window-end-label" for="daily-window-end-time-input" style="margin-left: 10px; margin-right: 10px; color: lightgray;">Daily end:</label>
+                        <input type="time" id="daily-window-end-time-input" disabled value="18:00">
+                    </div>
+                </div>
+
+                <div class="row row-ident-2">
+                    <div class="col">
+                        <label id="daily-window-timezone-label" for="daily-window-timezone-input" style="margin-right: 10px; color: lightgray;">Daily schedule timezone:</label>
+                        <select id="daily-window-timezone-input" disabled style="height: 30px;"></select>
+                    </div>
+                </div>
+
             </div>
 
             <div class="row bg-white">

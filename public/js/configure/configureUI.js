@@ -22,6 +22,14 @@ const limitEndLabel = document.getElementById('limit-end-label');
 const limitEndDateInput = document.getElementById('limit-end-date-input');
 const limitEndTimeInput = document.getElementById('limit-end-time-input');
 
+const dailyWindowCheckbox = document.getElementById('daily-window-checkbox');
+const dailyWindowStartLabel = document.getElementById('daily-window-start-label');
+const dailyWindowStartTimeInput = document.getElementById('daily-window-start-time-input');
+const dailyWindowEndLabel = document.getElementById('daily-window-end-label');
+const dailyWindowEndTimeInput = document.getElementById('daily-window-end-time-input');
+const dailyWindowTimezoneLabel = document.getElementById('daily-window-timezone-label');
+const dailyWindowTimezoneInput = document.getElementById('daily-window-timezone-input');
+
 const pairButton = document.getElementById('pair-button');
 const configureButton = document.getElementById('configure-button');
 const shutdownButton = document.getElementById('shutdown-button');
@@ -239,6 +247,17 @@ limitEndCheckbox.addEventListener('change', () => {
 
 });
 
+dailyWindowCheckbox.addEventListener('change', () => {
+
+    dailyWindowStartTimeInput.disabled = !dailyWindowCheckbox.checked;
+    dailyWindowEndTimeInput.disabled = !dailyWindowCheckbox.checked;
+    dailyWindowTimezoneInput.disabled = !dailyWindowCheckbox.checked;
+    dailyWindowStartLabel.style.color = dailyWindowCheckbox.checked ? '' : 'lightgray';
+    dailyWindowEndLabel.style.color = dailyWindowCheckbox.checked ? '' : 'lightgray';
+    dailyWindowTimezoneLabel.style.color = dailyWindowCheckbox.checked ? '' : 'lightgray';
+
+});
+
 const convertDatetimeToTimezone = (dateInput, timeInput) => {
 
     const timeString = (timeInput.value === '') ? '0:00' : timeInput.value;
@@ -253,6 +272,49 @@ const convertDatetimeToTimezone = (dateInput, timeInput) => {
     return `UTC${sign}${h}:${m}`;
 
 };
+
+function formatTimezoneOffset(offsetSeconds) {
+
+    const sign = offsetSeconds >= 0 ? '+' : '-';
+    let mins = Math.abs(offsetSeconds) / 60;
+    let h = Math.floor(mins / 60);
+    let m = mins % 60;
+    h = h < 10 ? '0' + h : h;
+    m = m < 10 ? '0' + m : m;
+    return `UTC${sign}${h}:${m}`;
+
+}
+
+function populateDailyTimezoneInput() {
+
+    const localOffsetSeconds = -(new Date()).getTimezoneOffset() * 60;
+
+    for (let offsetMinutes = -12 * 60; offsetMinutes <= 14 * 60; offsetMinutes += 15) {
+
+        const offsetSeconds = offsetMinutes * 60;
+        const option = document.createElement('option');
+        option.value = offsetSeconds;
+        option.innerHTML = formatTimezoneOffset(offsetSeconds);
+
+        if (offsetSeconds === localOffsetSeconds) {
+
+            option.selected = true;
+
+        }
+
+        dailyWindowTimezoneInput.appendChild(option);
+
+    }
+
+}
+
+function timeInputToSeconds(timeInput) {
+
+    const timeString = (timeInput.value === '') ? '00:00' : timeInput.value;
+    const timeParts = timeString.split(':').map((part) => parseInt(part));
+    return timeParts[0] * 60 * 60 + timeParts[1] * 60;
+
+}
 
 function updateStartTimezone() {
 
@@ -405,7 +467,19 @@ function onConfigureClick() {
 
         }
 
-        configure(interval, startDt, endDt, (err) => {
+        let dailyActiveStart = 0;
+        let dailyActiveEnd = 0;
+        let dailyActiveUtcOffset = 0;
+
+        if (dailyWindowCheckbox.checked) {
+
+            dailyActiveStart = timeInputToSeconds(dailyWindowStartTimeInput);
+            dailyActiveEnd = timeInputToSeconds(dailyWindowEndTimeInput);
+            dailyActiveUtcOffset = parseInt(dailyWindowTimezoneInput.value);
+
+        }
+
+        configure(interval, startDt, endDt, dailyActiveStart, dailyActiveEnd, dailyActiveUtcOffset, (err) => {
 
             if (err) {
 
@@ -542,6 +616,31 @@ function checkInputs() {
                 limitStartDateInput.style.border = '';
                 limitEndTimeInput.style.border = '';
                 limitEndDateInput.style.border = '';
+
+            }, 6000);
+
+            return false;
+
+        }
+
+    }
+
+    if (dailyWindowCheckbox.checked) {
+
+        const dailyActiveStart = timeInputToSeconds(dailyWindowStartTimeInput);
+        const dailyActiveEnd = timeInputToSeconds(dailyWindowEndTimeInput);
+
+        if (dailyActiveStart === dailyActiveEnd) {
+
+            displayError('Please provide different daily active start and end times.');
+
+            dailyWindowStartTimeInput.style.border = '2px solid red';
+            dailyWindowEndTimeInput.style.border = '2px solid red';
+
+            setTimeout(() => {
+
+                dailyWindowStartTimeInput.style.border = '';
+                dailyWindowEndTimeInput.style.border = '';
 
             }, 6000);
 
@@ -769,6 +868,7 @@ const nextHour = ('0' + dateTime.getHours()).slice(-2) + ':00';
 limitStartDateInput.value = today;
 limitStartTimeInput.value = nextHour;
 
+populateDailyTimezoneInput();
 updateStartTimezone();
 
 // Let end date/time default to 2 weeks

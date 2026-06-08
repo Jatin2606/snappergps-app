@@ -10,9 +10,12 @@
  * @param {int} snapshotInterval Seconds between snapshots
  * @param {object} startDt Datetime object for when the device should start collecting snapshots
  * @param {object} endDt Datetime object for when the device should stop collecting snapshots
+ * @param {int} dailyActiveStart Seconds since midnight when daily recording should start
+ * @param {int} dailyActiveEnd Seconds since midnight when daily recording should end
+ * @param {int} dailyActiveUtcOffset Seconds east of UTC for the daily recording window
  * @param {function} callback Function called upon completion
  */
-function configure(snapshotInterval, startDt, endDt, callback) {
+function configure(snapshotInterval, startDt, endDt, dailyActiveStart, dailyActiveEnd, dailyActiveUtcOffset, callback) {
 
     console.log('Setting time');
 
@@ -29,7 +32,7 @@ function configure(snapshotInterval, startDt, endDt, callback) {
 
         console.log('Start logging');
 
-        start(snapshotInterval, startDt, endDt, (startErr) => {
+        start(snapshotInterval, startDt, endDt, dailyActiveStart, dailyActiveEnd, dailyActiveUtcOffset, (startErr) => {
 
             if (startErr) {
 

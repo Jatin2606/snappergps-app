@@ -5,7 +5,7 @@
 // https://developers.google.com/web/fundamentals/codelabs/offline
 
 // Cache name
-const CACHE = 'snappergps-static-v1';
+const CACHE = 'snappergps-static-v2';
 
 async function updateCache() {
     // Open 'caches' object
